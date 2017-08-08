@@ -10,4 +10,7 @@ RUN ln -s /code/backup /usr/bin/
 
 RUN pip install -r requirements.txt
 
+RUN echo 'uid root' >> /etc/rsyncd.conf
+RUN echo 'read only = true' >> /etc/rsyncd.conf
+
 CMD backup
