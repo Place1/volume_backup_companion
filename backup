@@ -1,0 +1,56 @@
+#!/usr/bin/env python
+import docker
+import os
+import sys
+import argparse
+
+SHOULD_PAUSE_FIRST = True
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--output', default=os.path.abspath('backups'),
+                        help='the path on the host where the backups should be saved')
+    parser.add_argument('--helper-image', default='volume_backup_companion', dest='helper_image')
+    args = parser.parse_args()
+
+    client = docker.from_env()
+    seen_volumes = []
+
+    for container in client.containers.list():
+        mounts = container.attrs.get('Mounts')
+
+        if len(mounts) > 0:
+            print('backing up volumes from container {} {}'.format(container.id[:8], container.name))
+
+            if SHOULD_PAUSE_FIRST is True:
+                print('pausing container {} {} before backing up'.format(container.id[:8], container.name))
+                container.pause()
+
+            for mount in mounts:
+                if mount['Name'] in seen_volumes:
+                    print('skipping volume {} from container {} {} because '
+                          'it has already been backed-up in this run!'
+                          .format(mount['Name'], container.id[:8], container.name))
+
+                print('backing up volume {} from container {} {}'
+                      .format(mount['Name'], container.id[:8], container.name))
+
+                run_config = {
+                    'command': 'rsync -azv ./ /backups/{}'.format(mount['Name']),
+                    'detach': True,
+                    'volumes_from': [container.id],
+                    'volumes': {
+                        args.output: '/backups'
+                    },
+                    'working_dir': mount['Destination']
+                }
+                helper_container = client.containers.run(args.helper_image, **run_config)
+                for line in helper_container.logs(stream=True, follow=True, timestamps=True):
+                    sys.stdout.write(line.decode('utf8'))
+
+                seen_volumes.append(mount['Name'])
+                helper_container.remove()
+
+            if SHOULD_PAUSE_FIRST is True:
+                print('resuming container {} {}'.format(container.id[:8], container.name))
+                container.unpause()
