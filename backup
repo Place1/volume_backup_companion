@@ -44,7 +44,7 @@ if __name__ == '__main__':
                       .format(mount['Name'], container.id[:8], container.name))
 
                 run_config = {
-                    'command': 'rsync -az --progress ./ /backups/{}'.format(mount['Name']),
+                    'command': 'rsync -az --stats ./ /backups/{}'.format(mount['Name']),
                     'detach': True,
                     'volumes_from': [container.id],
                     'volumes': {
