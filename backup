@@ -10,7 +10,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--output', default=os.path.abspath('backups'),
                         help='the path on the host where the backups should be saved')
-    parser.add_argument('--helper-image', default='volume_backup_companion', dest='helper_image')
+    parser.add_argument('--helper-image', default='place1/volume_backup_companion', dest='helper_image')
     args = parser.parse_args()
 
     client = docker.from_env()
