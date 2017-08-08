@@ -6,4 +6,8 @@ RUN apk add rsync
 COPY ./ /code
 WORKDIR /code
 
+RUN ln -s /code/backup /usr/bin/
+
+RUN pip install -r requirements.txt
+
 CMD backup
