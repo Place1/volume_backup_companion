@@ -30,10 +30,15 @@ if __name__ == '__main__':
                 container.pause()
 
             for mount in mounts:
+                if 'Name' not in mount:
+                    print('skipping volume {} because it is not a named volume'.format(mount))
+                    continue
+
                 if mount['Name'] in seen_volumes:
                     print('skipping volume {} from container {} {} because '
                           'it has already been backed-up in this run!'
                           .format(mount['Name'], container.id[:8], container.name))
+                    continue
 
                 print('backing up volume {} from container {} {}'
                       .format(mount['Name'], container.id[:8], container.name))
